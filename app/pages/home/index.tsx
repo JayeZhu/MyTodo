@@ -1,10 +1,17 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { View, Text } from 'react-native';
-import Ionicons from 'react-native-vector-icons/Ionicons';
+import TodoList from './components/TodoList';
+import Create from './components/Create';
 
 const Home = () => {
+  const listRef = useRef<any>();
+
+  const reloadTodoList = () => {
+    listRef.current?.reload();
+  }
   return <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
-    <Text>HOME</Text>
+    <TodoList ref={listRef}></TodoList>
+    <Create onCreateSuccess={reloadTodoList}/>
   </View>;
 };
 
