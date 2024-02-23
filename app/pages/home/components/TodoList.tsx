@@ -1,11 +1,12 @@
 import { Button, ListItem } from '@rneui/base';
 import React, { useEffect, useState, forwardRef, useImperativeHandle } from 'react';
-import { View, Text } from 'react-native';
+import { View, Text, Alert } from 'react-native';
 import { TodoItem } from '../../../interfaces/todo';
 import to from 'await-to-js';
-import { getList, putTodo } from '../../../services/todo';
+import { deleteTodo, getList, putTodo } from '../../../services/todo';
+import dayjs from 'dayjs';
 
-interface IProps {};
+interface IProps { };
 
 const TodoList = (props: IProps, ref: any) => {
   const [list, setList] = useState<TodoItem[]>([]);
@@ -18,15 +19,22 @@ const TodoList = (props: IProps, ref: any) => {
   }
 
   const changeTodoStatus = async (item: TodoItem) => {
-    const data = JSON.stringify({ finishedAt: item?.finishedAt ? null : new Date().toISOString()});
-    // const [err, res] = await to(putTodo(item.id, JSON.stringify(data))) // 修改状态
-    const [err, res] = await to(fetch(`https://next-app-coral-three.vercel.app/api/todos/${item.id}`, {
-      method: 'PUT',
-      // body: JSON.stringify({ finishedAt: !item?.finishedAt ? new Date().toISOString() : null }),
-      body: data,
-    }));
-    console.log({ err, res });
-    fetchList();
+    const data = { finishedAt: item?.finishedAt ? null : dayjs().toISOString() }
+    const [err, res] = await to(putTodo(item.id, data)) // 修改状态
+    if (err) Alert.alert('更新失败');
+    if (res) {
+      Alert.alert('更新成功');
+      fetchList();
+    }
+  }
+
+  const deleteItem = async () => {
+    const [err, res] = await to(deleteTodo(list[0]?.id))
+    if (err) Alert.alert('删除失败');
+    if (res) {
+      Alert.alert('删除成功');
+      fetchList();
+    }
   }
 
   useImperativeHandle(ref, () => ({
@@ -47,7 +55,7 @@ const TodoList = (props: IProps, ref: any) => {
             checkedIcon="checkbox-marked"
             uncheckedIcon="checkbox-blank-outline"
             checked={!!item?.finishedAt}
-            onPress={() => { changeTodoStatus(item)}}
+            onPress={() => { changeTodoStatus(item) }}
           />
           <ListItem.Content>
             <ListItem.Title>{item.name}</ListItem.Title>
@@ -56,6 +64,7 @@ const TodoList = (props: IProps, ref: any) => {
         </ListItem>
       })
     }
+    <Text onPress={() => deleteItem()}>删除</Text>
     <Text onPress={() => { fetchList() }} >加载更多</Text>
   </View>;
 };
